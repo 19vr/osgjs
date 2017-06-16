@@ -24,7 +24,7 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
         'shadowBias'
         // 'shadowNormalBias'
     ],
-    validOutputs: [ 'float' ],
+    validOutputs: [ 'float' /*, 'outDistance'*/ ],
 
     globalFunctionDeclaration: function () {
         return '#pragma include "shadowsReceive.glsl"';
@@ -38,7 +38,9 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
     // must return an array of defines
     // because it will be passed to the ShaderGenerator
     getDefines: function () {
-        return this._shadow.getDefines();
+        var defines = this._shadow.getDefines();
+        if ( this._outputs.outDistance ) defines.push( '#define _OUT_DISTANCE' );
+        return defines;
     },
     getExtensions: function () {
         return this._shadow.getExtensions();
@@ -53,7 +55,7 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
             inp.shadowTexture
         ];
 
-        if ( this._shadow.getAtlas() ) {
+        if ( inputs.shadowTextureMapSize ) {
             inputs.push( inp.shadowTextureMapSize );
         }
 
@@ -67,8 +69,12 @@ ShadowReceive.prototype = MACROUTILS.objectInherit( Node.prototype, {
             inp.shadowBias
         ] );
 
-        if ( this._shadow.getNormalBias() ) {
+        if ( inputs.shadowNormalBias ) {
             inputs.push( inp.shadowNormalBias );
+        }
+
+        if ( this._outputs.outDistance ) {
+            inputs.push( this._outputs.outDistance );
         }
 
         return ShaderUtils.callFunction( 'computeShadow', this._outputs.float, inputs );

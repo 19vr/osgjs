@@ -352,6 +352,15 @@ var CompilerFragment = {
         return inputs;
     },
 
+    getOrCreateDistanceShadow: function ( num ) {
+        if ( !this._computeShadowOutDistance ) return undefined;
+
+        var varName = 'shadowDistance' + num;
+        var distance = this.getVariable( varName );
+        if ( !distance ) distance = this.createVariable( 'float', varName ).setValue( '0.0' );
+        return distance;
+    },
+
     createShadowingLight: function ( light, lighted ) {
 
         var lightNum = light.getLightNumber();
@@ -362,9 +371,14 @@ var CompilerFragment = {
         var inputs = this.getInputsFromShadow( shadowReceive, shadowTexture, lighted );
 
         var shadowedOutput = this.createVariable( 'float' );
-        this.getNode( 'ShadowReceive' ).setShadowAttribute( shadowReceive ).inputs( inputs ).outputs( {
+        var outputs = {
             float: shadowedOutput
-        } );
+        };
+
+        var outDistance = this.getOrCreateDistanceShadow( lightNum );
+        if ( outDistance ) outputs.outDistance = outDistance;
+
+        this.getNode( 'ShadowReceive' ).setShadowAttribute( shadowReceive ).inputs( inputs ).outputs( outputs );
 
         return shadowedOutput;
     },
